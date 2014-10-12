@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 
 #include <QMetaEnum>
+#include <QNetworkInterface>
 #include <QNetworkReply>
 
 namespace HtmlDisplayQt
@@ -99,10 +100,23 @@ MainWindow::networkAccessFinished(QNetworkReply * reply)
         // find the enumeration value's string representation
         const QMetaObject & mo = QNetworkReply::staticMetaObject;
         QMetaEnum me = mo.enumerator(mo.indexOfEnumerator("NetworkError"));
-        QString errorMessage = QString("%1 (%2)").arg(me.valueToKey(reply->error())).arg(reply->error());
+        QString errorMember = me.valueToKey(reply->error());
+
+        // find my IP addresses
+        QStringList ipAddresses;
+        QHostAddress addr;
+        foreach (addr, QNetworkInterface::allAddresses())
+        {
+            ipAddresses << addr.toString();
+        }
+
+        QString errorMessage = QString("%3 | %1 (%2)").arg(errorMember).arg(reply->error()).arg(ipAddresses.join(", "));
 
         m_errorLabel->setText(errorMessage);
         m_errorLabel->show();
+
+        // don't update the content
+        return;
     }
 
     QByteArray currentBytes = reply->readAll();
