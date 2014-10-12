@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 
+#include <QMetaEnum>
 #include <QNetworkReply>
 
 namespace HtmlDisplayQt
@@ -33,7 +34,16 @@ MainWindow::MainWindow(const QUrl & url, QWidget * parent)
     );
     m_minuteTimer->start(60000);
 
+    m_errorLabel = new QLabel("", this);
+    m_errorLabel->setAlignment(Qt::AlignRight);
+    m_errorLabel->setIndent(4);
+    m_errorLabel->setVisible(false);
+    QFont labelFont = m_errorLabel->font();
+    labelFont.setPointSize(16);
+    m_errorLabel->setFont(labelFont);
+
     m_layout->addWidget(m_webView);
+    m_layout->addWidget(m_errorLabel);
 
     m_container->setLayout(m_layout);
 
@@ -78,6 +88,22 @@ void
 MainWindow::networkAccessFinished(QNetworkReply * reply)
 {
     qDebug() << "Network access finished!";
+
+    if (reply->error() == QNetworkReply::NoError)
+    {
+        m_errorLabel->setText(QString());
+        m_errorLabel->hide();
+    }
+    else
+    {
+        // find the enumeration value's string representation
+        const QMetaObject & mo = QNetworkReply::staticMetaObject;
+        QMetaEnum me = mo.enumerator(mo.indexOfEnumerator("NetworkError"));
+        QString errorMessage = QString("%1 (%2)").arg(me.valueToKey(reply->error())).arg(reply->error());
+
+        m_errorLabel->setText(errorMessage);
+        m_errorLabel->show();
+    }
 
     QByteArray currentBytes = reply->readAll();
     if (m_lastPageBytes == currentBytes)

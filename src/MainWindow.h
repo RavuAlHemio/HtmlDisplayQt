@@ -1,4 +1,5 @@
 #include <QBoxLayout>
+#include <QLabel>
 #include <QMainWindow>
 #include <QTimer>
 #include <QWebEngineView>
@@ -27,6 +28,7 @@ private:
     QWidget *m_container;
     QWebEngineView *m_webView;
     QTimer *m_minuteTimer;
+    QLabel *m_errorLabel;
 
 public slots:
     void minuteTimerTick();
